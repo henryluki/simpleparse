@@ -24,17 +24,19 @@ class Items(db.Model):
   title = db.Column(db.String(80))
   tag = db.Column(db.String(20))
   desc = db.Column(db.String(256))
+  link = db.Column(db.String(256))
   like = db.Column(db.Integer)
   comment = db.Column(db.Integer)
   share = db.Column(db.Integer)
   # products = db.relationship('products', backref='item',
   #                               lazy='dynamic')
 
-  def __init__(self, item_id, title, tag, desc, like, comment, share):
+  def __init__(self, item_id, title, tag, desc, link, like, comment, share):
       self.item_id = item_id
       self.title = title
       self.tag = tag
       self.desc = desc
+      self.link = link
       self.like = like
       self.comment = comment
       self.share = share
@@ -45,12 +47,14 @@ class Products(db.Model):
   title = db.Column(db.String(80))
   price = db.Column(db.Float)
   like = db.Column(db.Float)
+  link = db.Column(db.String(256))
 
-  def __init__(self, item_id, title, price, like):
+  def __init__(self, item_id, title, price, like, link):
     self.item_id = item_id
     self.title = title
     self.price = price
     self.like = like
+    self.link = link
 
 #######
 ###  spider
@@ -84,7 +88,7 @@ class Spider(object):
 
       status = Items.query.filter_by(item_id = item['id']).first()
       if not status:
-        item_model = Items(item['id'],item['title'], item['short_title'], item['share_msg'],
+        item_model = Items(item['id'],item['title'], item['short_title'], item['share_msg'], item['content_url'],
           item['likes_count'],item['comments_count'],item['shares_count'])
         db.session.add(item_model)
         try:
@@ -105,10 +109,11 @@ class Spider(object):
       title = titles[item][1].text if titles[item][1].text else titles[item][0].text
       price = self.to_integer(prices[item][0].text)
       like = self.to_integer(likes[item].text)
+      link = links[item].attrib['href']
 
       status = Products.query.filter_by(item_id = url_ids[1], title = title).first()
       if not status:
-        product = Products(url_ids[1], title, price, like)
+        product = Products(url_ids[1], title, price, like, link)
         db.session.add(product)
         try:
           db.session.commit()
@@ -131,15 +136,15 @@ class Spider(object):
     offset = 20
     # for 400 hundreds items
 
-    # for i in range(20):
-    #   params ="limit=" + str(limit) + "&offset=" + str(i * offset)
-    #   url = API_URL + params
-    #   _URLS.append(url)
-
-    for i in range(20):
-      params ="limit=" + str(limit) + "&offset=" + str((20 - i) * offset)
+    for i in range(10):
+      params ="limit=" + str(limit) + "&offset=" + str(i * offset)
       url = API_URL + params
       _URLS.append(url)
+
+    # for i in range(20):
+    #   params ="limit=" + str(limit) + "&offset=" + str((20 - i) * offset)
+    #   url = API_URL + params
+    #   _URLS.append(url)
 
     pool = ThreadPool(4)  # 4 process
     pool.map(self.parse_items, _URLS) # func , args
@@ -153,7 +158,7 @@ class Spider(object):
 
 
 def main():
-  # db.create_all()
+  db.create_all()
 
   s = Spider()
   s.items_run()
