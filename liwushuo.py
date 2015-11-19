@@ -1,5 +1,5 @@
 # -*- coding=utf-8 -*-
-import requests,json,re
+import requests, json, re
 from lxml import etree
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -7,16 +7,18 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-#######
-###  model
-#######
-
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:1994225317@localhost/items'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/items'
+# fix `track_modifications` error on sqlalchemy
+app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', True)
 db = SQLAlchemy(app)
+
+#######
+###  model
+#######
 
 class Items(db.Model):
   id = db.Column(db.Integer, primary_key=True)
@@ -107,8 +109,8 @@ class Spider(object):
 
     for item in range(len(titles)):
       title = titles[item][1].text if titles[item][1].text else titles[item][0].text
-      price = self.to_integer(prices[item][0].text)
-      like = self.to_integer(likes[item].text)
+      price = Util.to_integer(prices[item][0].text)
+      like = Util.to_integer(likes[item].text)
       link = links[item].attrib['href']
 
       status = Products.query.filter_by(item_id = url_ids[1], title = title).first()
@@ -120,13 +122,34 @@ class Spider(object):
         except Exception, e:
           print "insert error"
 
+#######
+###  util
+#######
+
+class Util(object):
+
+  def __init__(self):
+    super(util, self).__init__()
+
+  @classmethod
   def to_integer(self, temp_str):
     m = re.search(r'(\d+\.?\d+)', temp_str)
     return float(m.group(0))
 
+
+#######
+###  runner
+#######
+
+class Runner(object):
+
+  def __init__(self):
+    super(Runner, self).__init__()
+    self.spider = Spider()
+
   def one_item_run(self):
-    pool = ThreadPool(8)  # 4 process
-    pool.map(self.parse_one_item, _URL_IDS) # func , args
+    pool = ThreadPool(8)  # 8 process
+    pool.map(self.spider.parse_one_item, _URL_IDS) # func , args
     pool.close()
     pool.join()
     # map(self.parse_one_item, _URL_IDS)
@@ -134,7 +157,7 @@ class Spider(object):
   def items_run(self):
     limit = 20
     offset = 20
-    # for 400 hundreds items
+    # for 200 hundreds items
 
     for i in range(10):
       params ="limit=" + str(limit) + "&offset=" + str(i * offset)
@@ -147,23 +170,23 @@ class Spider(object):
     #   _URLS.append(url)
 
     pool = ThreadPool(4)  # 4 process
-    pool.map(self.parse_items, _URLS) # func , args
+    pool.map(self.spider.parse_items, _URLS) # func , args
     pool.close()
     pool.join()
 
+  @classmethod
+  def start(cls):
+    cls().items_run()
+    print "Items_run done!"
+    cls().one_item_run()
+    print "Run spider finished!"
 
-#######
-###  run
-#######
+  @classmethod
+  def init(cls):
+    db.create_all()
+    print "Create tables done!"
 
-
-def main():
-  db.create_all()
-
-  s = Spider()
-  s.items_run()
-  s.one_item_run()
-  print "finished!"
 
 if __name__ == '__main__':
-  main()
+  Runner.init()
+  Runner.start()
