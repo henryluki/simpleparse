@@ -71,7 +71,8 @@ class Spider(object):
   def __init__(self):
     super(Spider, self).__init__()
 
-  def get_headers(self):
+  @staticmethod
+  def get_headers():
     headers = {
       'User-Agent' : 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322)'
     }
@@ -129,10 +130,10 @@ class Spider(object):
 class Util(object):
 
   def __init__(self):
-    super(util, self).__init__()
+    super(Util, self).__init__()
 
-  @classmethod
-  def to_integer(self, temp_str):
+  @staticmethod
+  def to_integer(temp_str):
     m = re.search(r'(\d+\.?\d+)', temp_str)
     return float(m.group(0))
 
@@ -181,8 +182,8 @@ class Runner(object):
     cls().one_item_run()
     print "Run spider finished!"
 
-  @classmethod
-  def init(cls):
+  @staticmethod
+  def init():
     db.create_all()
     print "Create tables done!"
 
