@@ -1,7 +1,7 @@
 simpleparse
 ===================
 
-small spiders for rss or json
+Small spiders for rss or json
 
 base libs:
 

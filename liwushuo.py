@@ -12,12 +12,12 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/items'
-# fix `track_modifications` error on sqlalchemy
+# fix `track_modifications` error on SQLAlchemy
 app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', True)
 db = SQLAlchemy(app)
 
 #######
-###  model
+###  Model
 #######
 
 class Items(db.Model):
@@ -59,7 +59,7 @@ class Products(db.Model):
     self.link = link
 
 #######
-###  spider
+###  Spider
 #######
 
 API_URL = "http://www.liwushuo.com/api/channels/1/items?"
@@ -123,7 +123,7 @@ class Spider(object):
           print "insert error"
 
 #######
-###  util
+###  Util
 #######
 
 class Util(object):
@@ -138,7 +138,7 @@ class Util(object):
 
 
 #######
-###  runner
+###  Runner
 #######
 
 class Runner(object):
